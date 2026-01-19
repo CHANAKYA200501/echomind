@@ -1,0 +1,144 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0b0b0b;
+  color: #f5f5f5;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 40px;
+  background: black;
+}
+
+.nav h2 {
+  color: #e50914;
+}
+
+.nav a {
+  color: white;
+  margin-left: 20px;
+  text-decoration: none;
+}
+
+.hero {
+  text-align: center;
+  padding: 120px 20px;
+}
+
+.hero h1 {
+  font-size: 48px;
+}
+
+.hero p {
+  color: #b3b3b3;
+}
+
+.cta {
+  display: inline-block;
+  margin-top: 30px;
+  padding: 14px 30px;
+  background: #e50914;
+  color: white;
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  padding: 40px;
+}
+
+.container.single {
+  grid-template-columns: 1fr;
+}
+
+.card {
+  background: #141414;
+  padding: 25px;
+  border-radius: 10px;
+}
+
+.card.center {
+  text-align: center;
+}
+
+.card.wide {
+  grid-column: span 2;
+}
+
+button {
+  background: #e50914;
+  color: white;
+  border: none;
+  padding: 10px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+button.danger {
+  background: #b20710;
+}
+
+select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.lock {
+  font-size: 60px;
+}
+
+.lock.locked { color: #e50914; }
+.lock.unstable { color: #facc15; }
+.lock.unlocked { color: #22c55e; }
+
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #777;
+}
+.status {
+  font-size: 14px;
+  margin-top: 8px;
+  color: #9ca3af;
+}
+
+.status.running {
+  color: #22c55e;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+.timer {
+  font-size: 13px;
+  color: #9ca3af;
+  margin-top: 6px;
+}
+.secondary {
+  background: #e50914;
+  color: #e5e7eb;
+}
+
+.analyzer {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 20px;
+}
+
+.analyzer-left {
+  border-right: 1px solid #1f2933;
+  padding-right: 15px;
+}
+
+.analyzer-right {
+  padding-left: 15px;
+}

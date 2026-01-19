@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EchoMind | Dashboard</title>
+  <link rel="stylesheet" href="/static/css/netflix.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+
+<nav class="nav">
+  <h2>EchoMind</h2>
+  <div>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/insights">Insights</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- SESSION CONTROL -->
+  <div class="card">
+    <h3>Session Control</h3>
+
+    <label>Mode</label>
+    <select id="mode">
+      <option value="study">Study</option>
+      <option value="work">Work</option>
+      <option value="creative">Creative</option>
+    </select>
+
+    <button onclick="initializeSession()">Initialize Session</button>
+
+    <button id="analyzeBtn" class="danger" onclick="startRealtimeAnalysis()">
+      ▶ Start Real-Time Analysis
+    </button>
+
+    <button id="terminateBtn" class="secondary" onclick="terminateSession()" disabled>
+      Terminate Session
+    </button>
+  </div>
+
+  <!-- ANALYZER (VERTICAL SPLIT) -->
+  <div class="card wide analyzer">
+
+    <!-- LEFT: LIVE STATUS -->
+    <div class="analyzer-left">
+      <div id="lockBox" class="lock locked">🔒</div>
+      <h2 id="lock">MENTAL LOCK</h2>
+      <h1 id="score">—</h1>
+
+      <p id="status" class="status idle">
+        Session not initialized.
+      </p>
+
+      <ul id="reasons"></ul>
+    </div>
+
+    <!-- RIGHT: GRAPH -->
+    <div class="analyzer-right">
+      <h3>Stress Trend</h3>
+      <canvas id="graph" height="150"></canvas>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

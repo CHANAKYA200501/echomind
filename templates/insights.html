@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>EchoMind | Insights</title>
+  <link rel="stylesheet" href="/static/css/netflix.css">
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+
+<nav class="nav">
+  <h2>EchoMind</h2>
+  <a href="/dashboard">Back to Dashboard</a>
+</nav>
+
+<div class="container single">
+
+  <div class="card">
+    <h2>Why Stress Increased</h2>
+    <ul id="reasons"></ul>
+  </div>
+
+  <div class="card">
+    <h2>AI Ethics</h2>
+    <p>
+      EchoMind does not record keystrokes, screens, audio, or video.
+      All analysis is pattern-based and privacy-first.
+    </p>
+  </div>
+
+</div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>

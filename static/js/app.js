@@ -1,0 +1,293 @@
+// ==============================
+// GLOBAL STATE
+// ==============================
+let startTime = null;
+let chart = null;
+let intervalId = null;
+let sessionActive = false;
+
+// Baseline so graph is never empty
+let historyData = [20, 22, 21, 23];
+
+// Frontend display smoothing (slow)
+let displayedScore = 30;
+
+
+// ==============================
+// INITIALIZE SESSION
+// ==============================
+function initializeSession() {
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+
+  sessionActive = false;
+  startTime = null;
+  historyData = [20, 22, 21, 23];
+  displayedScore = 30;
+
+  document.getElementById("score").innerText = "—";
+  document.getElementById("lock").innerText = "MENTAL LOCK";
+  document.getElementById("status").innerText =
+    "Session initialized. Ready to analyze.";
+  document.getElementById("status").className = "status idle";
+  document.getElementById("reasons").innerHTML = "";
+
+  updateLockVisual("LOCKED");
+  drawChart(historyData);
+
+  fetch("/start", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      mode: document.getElementById("mode").value
+    })
+  });
+
+  const analyzeBtn = document.getElementById("analyzeBtn");
+  analyzeBtn.disabled = false;
+  analyzeBtn.innerText = "▶ Start Real-Time Analysis";
+
+  document.getElementById("terminateBtn").disabled = false;
+}
+
+
+// ==============================
+// START REAL-TIME ANALYSIS
+// ==============================
+function startRealtimeAnalysis() {
+  if (intervalId || sessionActive) return;
+
+  sessionActive = true;
+  startTime = Date.now();
+
+  const status = document.getElementById("status");
+  status.innerText = "Analyzing work patterns in real time…";
+  status.className = "status running";
+
+  const btn = document.getElementById("analyzeBtn");
+  btn.disabled = true;
+  btn.innerText = "Analyzing…";
+
+  updateTimer();
+  drawChart(historyData);
+
+  // ⏳ Slower stress sampling (IMPORTANT)
+  intervalId = setInterval(runAnalysisTick, 6000);
+}
+
+
+// ==============================
+// TERMINATE SESSION
+// ==============================
+function terminateSession() {
+  if (!sessionActive) return;
+
+  sessionActive = false;
+
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+
+  showSessionSummary();
+  startTime = null;
+
+  document.getElementById("status").className = "status idle";
+
+  const analyzeBtn = document.getElementById("analyzeBtn");
+  analyzeBtn.disabled = false;
+  analyzeBtn.innerText = "▶ Start Real-Time Analysis";
+
+  document.getElementById("terminateBtn").disabled = true;
+
+  const analyzer = document.querySelector(".analyzer-left");
+  if (analyzer) analyzer.classList.remove("alert");
+}
+
+
+// ==============================
+// ANALYSIS TICK
+// ==============================
+function runAnalysisTick() {
+  if (!sessionActive) return;
+
+  fetch("/tick", { method: "POST" })
+    .then(r => r.json())
+    .then(d => {
+      if (!sessionActive) return;
+
+      // 🧠 Strong temporal smoothing (KEY CHANGE)
+      displayedScore = Math.round(
+        0.08 * d.score + 0.92 * displayedScore
+      );
+
+      document.getElementById("score").innerText =
+        `Stress Score: ${displayedScore}`;
+
+      document.getElementById("lock").innerText =
+        `MENTAL LOCK: ${d.lock}`;
+
+      updateLockVisual(d.lock);
+      updateReasons(d.reasons);
+      applyStressAlert(displayedScore);
+
+      historyData = d.history && d.history.length ? d.history : historyData;
+      drawChart(historyData);
+    })
+    .catch(() => {
+      if (sessionActive) {
+        document.getElementById("status").innerText =
+          "Connection unstable — running locally";
+      }
+    });
+}
+
+
+// ==============================
+// TIMER
+// ==============================
+function updateTimer() {
+  if (!sessionActive || !startTime) return;
+
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+
+  document.getElementById("status").innerText =
+    `Analyzing… Session time ${mins}:${secs.toString().padStart(2, "0")}`;
+
+  setTimeout(updateTimer, 1000);
+}
+
+
+// ==============================
+// SESSION SUMMARY
+// ==============================
+function showSessionSummary() {
+  if (!historyData.length) return;
+
+  const avg = Math.round(
+    historyData.reduce((a, b) => a + b, 0) / historyData.length
+  );
+  const peak = Math.max(...historyData);
+
+  const state =
+    avg < 40 ? "UNLOCKED" :
+    avg < 70 ? "UNSTABLE" : "LOCKED";
+
+  document.getElementById("status").innerText =
+    `Session Summary → Avg: ${avg}, Peak: ${peak}, State: ${state}`;
+}
+
+
+// ==============================
+// EXPLAINABLE AI
+// ==============================
+function updateReasons(reasons) {
+  const ul = document.getElementById("reasons");
+  if (!ul) return;
+
+  ul.innerHTML = "";
+  reasons.forEach(reason => {
+    const li = document.createElement("li");
+    li.innerText = reason;
+    ul.appendChild(li);
+  });
+}
+
+
+// ==============================
+// LOCK VISUAL
+// ==============================
+function updateLockVisual(lockState) {
+  const lockBox = document.getElementById("lockBox");
+  lockBox.className = "lock";
+
+  if (lockState === "LOCKED") {
+    lockBox.classList.add("locked");
+    lockBox.innerText = "🔒";
+  } else if (lockState === "UNLOCKING") {
+    lockBox.classList.add("unstable");
+    lockBox.innerText = "⚠️";
+  } else {
+    lockBox.classList.add("unlocked");
+    lockBox.innerText = "🔓";
+  }
+}
+
+
+// ==============================
+// HIGH STRESS ALERT
+// ==============================
+function applyStressAlert(score) {
+  const analyzer = document.querySelector(".analyzer-left");
+  if (!analyzer) return;
+
+  if (score >= 75) {
+    analyzer.classList.add("alert");
+  } else {
+    analyzer.classList.remove("alert");
+  }
+}
+
+
+// ==============================
+// EXPORT SESSION SNAPSHOT
+// ==============================
+function exportSnapshot() {
+  const canvas = document.getElementById("graph");
+  if (!canvas) return;
+
+  const link = document.createElement("a");
+  link.download = "echomind_session.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+
+
+// ==============================
+// STRESS TREND CHART
+// ==============================
+function drawChart(data) {
+  const canvas = document.getElementById("graph");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+  if (typeof Chart === "undefined") {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#e50914";
+    ctx.font = "14px Arial";
+    ctx.fillText("Chart unavailable (offline mode)", 20, 40);
+    return;
+  }
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: data.map((_, i) => `T${i + 1}`),
+      datasets: [{
+        data: data,
+        borderColor: "#e50914",
+        backgroundColor: "rgba(229,9,20,0.25)",
+        tension: 0.35,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      animation: { duration: 400 },
+      scales: {
+        y: { min: 0, max: 100 },
+        x: {}
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+}
