@@ -1,34 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>EchoMind | Insights</title>
   <link rel="stylesheet" href="/static/css/netflix.css">
-  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
 </head>
 <body>
 
 <nav class="nav">
   <h2>EchoMind</h2>
-  <a href="/dashboard">Back to Dashboard</a>
+  <a href="/dashboard">Dashboard</a>
 </nav>
 
-<div class="container single">
+<div class="container">
 
   <div class="card">
-    <h2>Why Stress Increased</h2>
-    <ul id="reasons"></ul>
+    <h3>🧠 Cognitive Summary</h3>
+    <p id="cogState">—</p>
+    <p id="recovery">—</p>
   </div>
 
   <div class="card">
-    <h2>AI Ethics</h2>
-    <p>
-      EchoMind does not record keystrokes, screens, audio, or video.
-      All analysis is pattern-based and privacy-first.
-    </p>
+    <h3>📊 Engagement Signals</h3>
+    <p id="boredom">—</p>
+    <p id="drift">—</p>
+  </div>
+
+  <div class="card">
+    <h3>⚠️ Explainability</h3>
+    <ul id="reasons"></ul>
+  </div>
+
+  <div class="card highlight">
+    <h3>🧘 Recommendation</h3>
+    <p id="intervention">—</p>
   </div>
 
 </div>
 
-<script src="/static/js/app.js"></script>
+<script src="{{ url_for('static', filename='js/insights.js') }}"></script>
 </body>
 </html>

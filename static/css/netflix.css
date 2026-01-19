@@ -142,3 +142,24 @@ footer {
 .analyzer-right {
   padding-left: 15px;
 }
+.badge {
+  margin-top: 10px;
+  padding: 6px 10px;
+  background: #111;
+  border-left: 4px solid #e50914;
+  color: #e5e7eb;
+  font-weight: 600;
+}
+
+.signals {
+  margin-top: 8px;
+  color: #facc15;
+  font-size: 0.9rem;
+}
+
+.intervention-box {
+  margin-top: 15px;
+  padding: 10px;
+  background: rgba(229, 9, 20, 0.1);
+  border-radius: 6px;
+}

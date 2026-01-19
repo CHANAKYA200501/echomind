@@ -9,7 +9,7 @@ let sessionActive = false;
 // Baseline so graph is never empty
 let historyData = [20, 22, 21, 23];
 
-// Frontend display smoothing (slow)
+// Frontend display smoothing (slow & realistic)
 let displayedScore = 30;
 
 
@@ -33,6 +33,11 @@ function initializeSession() {
     "Session initialized. Ready to analyze.";
   document.getElementById("status").className = "status idle";
   document.getElementById("reasons").innerHTML = "";
+
+  // Reset new UI
+  document.getElementById("cognitiveState").innerText = "Cognitive State: —";
+  document.getElementById("signals").innerText = "—";
+  document.getElementById("intervention").innerText = "—";
 
   updateLockVisual("LOCKED");
   drawChart(historyData);
@@ -73,7 +78,7 @@ function startRealtimeAnalysis() {
   updateTimer();
   drawChart(historyData);
 
-  // ⏳ Slower stress sampling (IMPORTANT)
+  // ⏳ Slow sampling (important for realism)
   intervalId = setInterval(runAnalysisTick, 6000);
 }
 
@@ -118,7 +123,7 @@ function runAnalysisTick() {
     .then(d => {
       if (!sessionActive) return;
 
-      // 🧠 Strong temporal smoothing (KEY CHANGE)
+      // 🧠 Strong temporal smoothing
       displayedScore = Math.round(
         0.08 * d.score + 0.92 * displayedScore
       );
@@ -129,10 +134,26 @@ function runAnalysisTick() {
       document.getElementById("lock").innerText =
         `MENTAL LOCK: ${d.lock}`;
 
+      // 🔐 Visuals
       updateLockVisual(d.lock);
       updateReasons(d.reasons);
       applyStressAlert(displayedScore);
 
+      // 🧠 NEW: Cognitive Intelligence UI
+      document.getElementById("cognitiveState").innerText =
+        `Cognitive State: ${d.cognitive_state}`;
+
+      let signals = [];
+      if (d.boredom) signals.push("😴 Boredom detected");
+      if (d.drift) signals.push("🧠 Cognitive drift detected");
+
+      document.getElementById("signals").innerText =
+        signals.length ? signals.join(" • ") : "Engagement stable";
+
+      document.getElementById("intervention").innerText =
+        d.intervention;
+
+      // 📊 Chart
       historyData = d.history && d.history.length ? d.history : historyData;
       drawChart(historyData);
     })
@@ -234,20 +255,6 @@ function applyStressAlert(score) {
 
 
 // ==============================
-// EXPORT SESSION SNAPSHOT
-// ==============================
-function exportSnapshot() {
-  const canvas = document.getElementById("graph");
-  if (!canvas) return;
-
-  const link = document.createElement("a");
-  link.download = "echomind_session.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
-}
-
-
-// ==============================
 // STRESS TREND CHART
 // ==============================
 function drawChart(data) {
@@ -256,13 +263,7 @@ function drawChart(data) {
 
   const ctx = canvas.getContext("2d");
 
-  if (typeof Chart === "undefined") {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#e50914";
-    ctx.font = "14px Arial";
-    ctx.fillText("Chart unavailable (offline mode)", 20, 40);
-    return;
-  }
+  if (typeof Chart === "undefined") return;
 
   if (chart) chart.destroy();
 
@@ -282,8 +283,7 @@ function drawChart(data) {
       responsive: true,
       animation: { duration: 400 },
       scales: {
-        y: { min: 0, max: 100 },
-        x: {}
+        y: { min: 0, max: 100 }
       },
       plugins: {
         legend: { display: false }

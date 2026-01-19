@@ -19,7 +19,44 @@ state = {
 }
 
 # Smoothed stress score (important)
-smoothed_score = 30  # starting baseline
+smoothed_score = 30  # baseline
+
+
+# -------------------------------
+# HELPER INTELLIGENCE FUNCTIONS
+# -------------------------------
+def cognitive_state(score, state):
+    if score < 30:
+        return "CALM"
+    if score < 50 and state["idle"] < 15:
+        return "FOCUSED"
+    if score < 40 and state["idle"] > 30:
+        return "DRIFTING"
+    if score < 75:
+        return "OVERLOADED"
+    return "CRITICAL"
+
+
+def detect_boredom(score, state):
+    return score < 35 and state["idle"] > 40
+
+
+def detect_drift(state):
+    return (
+        state["idle"] > 20 and
+        state["typing"] < 40 and
+        state["mouse"] > 70
+    )
+
+
+def intervention(cog_state):
+    if cog_state == "DRIFTING":
+        return "Try switching tasks to regain engagement."
+    if cog_state == "OVERLOADED":
+        return "Take a short 2-minute micro-break."
+    if cog_state == "CRITICAL":
+        return "Pause the session and reset cognitive load."
+    return "You are in a healthy cognitive zone."
 
 
 # -------------------------------
@@ -29,9 +66,11 @@ smoothed_score = 30  # starting baseline
 def landing():
     return render_template("index.html")
 
+
 @app.route("/dashboard")
 def dashboard():
     return render_template("dashboard.html")
+
 
 @app.route("/insights")
 def insights():
@@ -55,7 +94,7 @@ def start():
         "mode": data.get("mode", "study")
     }
 
-    smoothed_score = 30  # reset baseline each session
+    smoothed_score = 30  # reset baseline
 
     return jsonify({
         "status": "session started",
@@ -82,8 +121,8 @@ def tick():
     prob = model.predict_proba(features)[0][1]
     raw_score = prob * 100
 
-    # 4️⃣ TEMPORAL SMOOTHING (KEY FIX)
-    alpha = 0.15  # smoothing factor (10–20% is ideal)
+    # 4️⃣ Temporal smoothing (realistic stress behavior)
+    alpha = 0.15
     smoothed_score = alpha * raw_score + (1 - alpha) * smoothed_score
     score = int(smoothed_score)
 
@@ -99,11 +138,28 @@ def tick():
     else:
         lock = "UNLOCKED"
 
+    # 7️⃣ Advanced cognition
+    cog_state = cognitive_state(score, state)
+    boredom = detect_boredom(score, state)
+    drift = detect_drift(state)
+
+    recovery = None
+    if len(state["history"]) >= 2:
+        if state["history"][-2] > 70 and score < 50:
+            recovery = "FAST"
+
     return jsonify({
         "score": score,
         "lock": lock,
         "history": state["history"],
-        "reasons": explain(state)
+        "reasons": explain(state),
+
+        # 🔥 Unbeatable features
+        "cognitive_state": cog_state,
+        "boredom": boredom,
+        "drift": drift,
+        "recovery": recovery,
+        "intervention": intervention(cog_state)
     })
 
 
