@@ -95,24 +95,8 @@ Each state triggers **context-aware recommendations**.
 ---
 
 ##  Project Structure
-echomind/
-│
-├── app.py                 # Core backend & intelligence
-├── engine.py              # Behavior simulation
-├── model.py               # ML model loader
-├── requirements.txt
-│
-├── templates/
-│   ├── index.html
-│   ├── dashboard.html
-│   └── insights.html
-│
-├── static/
-│   ├── css/netflix.css
-│   ├── js/app.js
-│   ├── js/insights.js
-│   └── favicon.ico
----
+<img width="450" height="368" alt="Screenshot 2026-01-20 at 10 46 32 AM" src="https://github.com/user-attachments/assets/7e044d4b-bdc9-40ee-8ab7-e378a5bcadc4" />
+
 
 ## ⚙️ How EchoMind Works (System Flow)
 
