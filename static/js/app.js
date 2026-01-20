@@ -5,6 +5,7 @@ let startTime = null;
 let chart = null;
 let intervalId = null;
 let sessionActive = false;
+let puzzleShown = false; // 🧩 prevent repeated puzzle popup
 
 // Baseline so graph is never empty
 let historyData = [20, 22, 21, 23];
@@ -23,6 +24,7 @@ function initializeSession() {
   }
 
   sessionActive = false;
+  puzzleShown = false;
   startTime = null;
   historyData = [20, 22, 21, 23];
   displayedScore = 30;
@@ -34,7 +36,7 @@ function initializeSession() {
   document.getElementById("status").className = "status idle";
   document.getElementById("reasons").innerHTML = "";
 
-  // Reset new UI
+  // Reset intelligence UI
   document.getElementById("cognitiveState").innerText = "Cognitive State: —";
   document.getElementById("signals").innerText = "—";
   document.getElementById("intervention").innerText = "—";
@@ -78,13 +80,13 @@ function startRealtimeAnalysis() {
   updateTimer();
   drawChart(historyData);
 
-  // ⏳ Slow sampling (important for realism)
+  // ⏳ Slow sampling for realism
   intervalId = setInterval(runAnalysisTick, 6000);
 }
 
 
 // ==============================
-// TERMINATE SESSION
+// TERMINATE SESSION (LOGIC ONLY)
 // ==============================
 function terminateSession() {
   if (!sessionActive) return;
@@ -139,7 +141,7 @@ function runAnalysisTick() {
       updateReasons(d.reasons);
       applyStressAlert(displayedScore);
 
-      // 🧠 NEW: Cognitive Intelligence UI
+      // 🧠 Cognitive Intelligence
       document.getElementById("cognitiveState").innerText =
         `Cognitive State: ${d.cognitive_state}`;
 
@@ -156,6 +158,12 @@ function runAnalysisTick() {
       // 📊 Chart
       historyData = d.history && d.history.length ? d.history : historyData;
       drawChart(historyData);
+
+      // 🧩 PUZZLE TRIGGER (ESCAPE ROOM CORE)
+      if (d.lock === "UNLOCKED" && !puzzleShown) {
+        puzzleShown = true;
+        openPuzzle();
+      }
     })
     .catch(() => {
       if (sessionActive) {
@@ -259,11 +267,9 @@ function applyStressAlert(score) {
 // ==============================
 function drawChart(data) {
   const canvas = document.getElementById("graph");
-  if (!canvas) return;
+  if (!canvas || typeof Chart === "undefined") return;
 
   const ctx = canvas.getContext("2d");
-
-  if (typeof Chart === "undefined") return;
 
   if (chart) chart.destroy();
 
@@ -285,9 +291,80 @@ function drawChart(data) {
       scales: {
         y: { min: 0, max: 100 }
       },
-      plugins: {
-        legend: { display: false }
-      }
+      plugins: { legend: { display: false } }
     }
   });
+}
+
+
+// ==============================
+// TERMINATION CONFIRMATION MODAL
+// ==============================
+function openModal() {
+  const modal = document.getElementById("confirmModal");
+  if (modal) modal.classList.remove("hidden");
+}
+
+function closeModal() {
+  const modal = document.getElementById("confirmModal");
+  if (modal) modal.classList.add("hidden");
+}
+
+function confirmTerminate() {
+  closeModal();
+  terminateSession();
+}
+
+
+// ==============================
+// KEYBOARD SHORTCUT (ESC)
+// ==============================
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && sessionActive) {
+    openModal();
+  }
+});
+
+
+// ==============================
+// 🧩 PUZZLE FUNCTIONS
+// ==============================
+function openPuzzle() {
+  const modal = document.getElementById("puzzleModal");
+  if (!modal || !modal.classList.contains("hidden")) return;
+
+  fetch("/puzzle")
+    .then(r => r.json())
+    .then(p => {
+      document.getElementById("puzzleQuestion").innerText = p.question;
+      document.getElementById("puzzleHint").innerText = "Hint: " + p.hint;
+      document.getElementById("puzzleResult").innerText = "";
+      document.getElementById("puzzleAnswer").value = "";
+      modal.classList.remove("hidden");
+    });
+}
+
+function closePuzzle() {
+  document.getElementById("puzzleModal").classList.add("hidden");
+}
+
+function submitPuzzle() {
+  const answer = document.getElementById("puzzleAnswer").value;
+
+  fetch("/validate_puzzle", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ answer })
+  })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) {
+        document.getElementById("puzzleResult").innerText =
+          "✅ Door Unlocked! Cognitive control achieved.";
+        setTimeout(closePuzzle, 1500);
+      } else {
+        document.getElementById("puzzleResult").innerText =
+          "❌ Incorrect. Try again.";
+      }
+    });
 }

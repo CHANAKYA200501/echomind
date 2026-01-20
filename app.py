@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import numpy as np
+import random
+
 from model import load_model
 from engine import simulate_behavior, explain
 
@@ -18,8 +20,33 @@ state = {
     "mode": "study"
 }
 
-# Smoothed stress score (important)
-smoothed_score = 30  # baseline
+# Archive of past sessions
+session_archive = []
+
+# Smoothed stress score
+smoothed_score = 30
+
+
+# -------------------------------
+# PUZZLE DATA (ESCAPE ROOM CORE)
+# -------------------------------
+PUZZLES = [
+    {
+        "question": "2, 6, 12, 20, ?",
+        "answer": "30",
+        "hint": "Pattern: n² + n"
+    },
+    {
+        "question": "1, 4, 9, 16, ?",
+        "answer": "25",
+        "hint": "Perfect squares"
+    },
+    {
+        "question": "3, 6, 11, 18, ?",
+        "answer": "27",
+        "hint": "Add consecutive odd numbers"
+    }
+]
 
 
 # -------------------------------
@@ -78,13 +105,23 @@ def insights():
 
 
 # -------------------------------
-# API ROUTES
+# SESSION CONTROL API
 # -------------------------------
 @app.route("/start", methods=["POST"])
 def start():
-    global state, smoothed_score
+    global state, smoothed_score, session_archive
     data = request.get_json()
 
+    # Archive previous session
+    if state["history"]:
+        session_archive.append({
+            "mode": state["mode"],
+            "avg": int(sum(state["history"]) / len(state["history"])),
+            "peak": max(state["history"]),
+            "length": len(state["history"])
+        })
+
+    # Reset session
     state = {
         "typing": 70,
         "idle": 5,
@@ -94,7 +131,7 @@ def start():
         "mode": data.get("mode", "study")
     }
 
-    smoothed_score = 30  # reset baseline
+    smoothed_score = 30
 
     return jsonify({
         "status": "session started",
@@ -102,14 +139,17 @@ def start():
     })
 
 
+# -------------------------------
+# CORE ANALYSIS TICK
+# -------------------------------
 @app.route("/tick", methods=["POST"])
 def tick():
     global state, smoothed_score
 
-    # 1️⃣ Simulate next behavior step
+    # Simulate next behavior step
     state.update(simulate_behavior(state, state["mode"]))
 
-    # 2️⃣ Feature vector
+    # Feature vector
     features = np.array([[
         state["typing"],
         state["idle"],
@@ -117,20 +157,20 @@ def tick():
         state["mouse"]
     ]])
 
-    # 3️⃣ Raw ML output
+    # ML prediction
     prob = model.predict_proba(features)[0][1]
     raw_score = prob * 100
 
-    # 4️⃣ Temporal smoothing (realistic stress behavior)
+    # Temporal smoothing
     alpha = 0.15
     smoothed_score = alpha * raw_score + (1 - alpha) * smoothed_score
     score = int(smoothed_score)
 
-    # 5️⃣ Store history
+    # Store history
     state["history"].append(score)
     state["history"] = state["history"][-10:]
 
-    # 6️⃣ Escape-room lock logic
+    # Escape-room lock logic
     if score > 70:
         lock = "LOCKED"
     elif score > 40:
@@ -138,7 +178,7 @@ def tick():
     else:
         lock = "UNLOCKED"
 
-    # 7️⃣ Advanced cognition
+    # Cognitive intelligence
     cog_state = cognitive_state(score, state)
     boredom = detect_boredom(score, state)
     drift = detect_drift(state)
@@ -154,7 +194,6 @@ def tick():
         "history": state["history"],
         "reasons": explain(state),
 
-        # 🔥 Unbeatable features
         "cognitive_state": cog_state,
         "boredom": boredom,
         "drift": drift,
@@ -164,7 +203,39 @@ def tick():
 
 
 # -------------------------------
-# RUN
+# SESSION HISTORY API
+# -------------------------------
+@app.route("/sessions")
+def sessions():
+    return jsonify(session_archive[-5:])
+
+
+# -------------------------------
+# PUZZLE APIs (ESCAPE ROOM)
+# -------------------------------
+@app.route("/puzzle")
+def puzzle():
+    p = random.choice(PUZZLES)
+    return jsonify({
+        "question": p["question"],
+        "hint": p["hint"]
+    })
+
+
+@app.route("/validate_puzzle", methods=["POST"])
+def validate_puzzle():
+    data = request.get_json()
+    answer = data.get("answer", "").strip()
+
+    for p in PUZZLES:
+        if answer == p["answer"]:
+            return jsonify({"success": True})
+
+    return jsonify({"success": False})
+
+
+# -------------------------------
+# RUN APP
 # -------------------------------
 if __name__ == "__main__":
     app.run(debug=True)

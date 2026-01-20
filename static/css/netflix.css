@@ -163,3 +163,20 @@ footer {
   background: rgba(229, 9, 20, 0.1);
   border-radius: 6px;
 }
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hidden { display: none; }
+
+.modal-box {
+  background: #111;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e50914;
+}

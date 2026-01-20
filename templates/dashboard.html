@@ -36,32 +36,31 @@
       ▶ Start Real-Time Analysis
     </button>
 
-    <button id="terminateBtn" class="secondary" onclick="terminateSession()" disabled>
+    <!-- 🔴 IMPORTANT: modal trigger -->
+    <button id="terminateBtn" class="secondary" onclick="openModal()" disabled>
       Terminate Session
     </button>
   </div>
 
-  <!-- ANALYZER (VERTICAL SPLIT) -->
+  <!-- ANALYZER -->
   <div class="card wide analyzer">
 
-    <!-- LEFT: LIVE STATUS + INTELLIGENCE -->
+    <!-- LEFT PANEL -->
     <div class="analyzer-left">
 
       <div id="lockBox" class="lock locked">🔒</div>
       <h2 id="lock">MENTAL LOCK</h2>
       <h1 id="score">—</h1>
 
-      <!-- NEW: Cognitive State -->
+      <!-- Cognitive Intelligence -->
       <p id="cognitiveState" class="badge">
         Cognitive State: —
       </p>
 
-      <!-- NEW: Signals -->
       <p id="signals" class="signals">
         —
       </p>
 
-      <!-- NEW: Intervention -->
       <div class="intervention-box">
         <h4>🧘 Recommendation</h4>
         <p id="intervention">—</p>
@@ -74,7 +73,7 @@
       <ul id="reasons"></ul>
     </div>
 
-    <!-- RIGHT: GRAPH -->
+    <!-- RIGHT PANEL -->
     <div class="analyzer-right">
       <h3>Stress Trend</h3>
       <canvas id="graph" height="150"></canvas>
@@ -84,6 +83,37 @@
 
 </div>
 
+<!-- ==============================
+     CONFIRM TERMINATION MODAL
+================================= -->
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-box">
+    <h3>End Session?</h3>
+    <p>Are you sure you want to terminate the current session?</p>
+    <div style="margin-top: 15px;">
+      <button class="danger" onclick="confirmTerminate()">Yes, Terminate</button>
+      <button onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+<!-- 🧩 PUZZLE MODAL -->
+<div id="puzzleModal" class="modal hidden">
+  <div class="modal-box">
+    <h3>🔐 Cognitive Lock Challenge</h3>
+    <p id="puzzleQuestion">—</p>
+
+    <input id="puzzleAnswer" placeholder="Your answer…" />
+
+    <p id="puzzleHint" class="hint"></p>
+
+    <div style="margin-top: 15px;">
+      <button class="danger" onclick="submitPuzzle()">Unlock</button>
+      <button onclick="closePuzzle()">Cancel</button>
+    </div>
+
+    <p id="puzzleResult"></p>
+  </div>
+</div>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
